@@ -117,49 +117,86 @@ function loadCanvas(input_field) {
     }
     input_field.after(canvas);
 
+    var controlDiv = document.createElement("div");
+    controlDiv.id = "image-params";
+    var zoomSlider = document.createElement("input");
+    zoomSlider.id = "szoom";
+    zoomSlider.type = "range";
+    // controlDiv.appendChild(zoomSlider);
+    addZoomEvent(zoomSlider);
+    canvas.after(zoomSlider);
+
+    var cropper = document.createElement("div");
+    cropper.id = "cropper";
+    cropper.appendChild(canvas);
+    cropper.appendChild(zoomSlider);
+    input_field.after(cropper);
+
+
     var drag = false;
     var dragStart;
     var dragEnd;
 
     /// attach click/drag events for panning
-    canvas.addEventListener("mousedown", (e) => {
-        dragStart = { // record drag start position
-            x: e.pageX - canvas.offsetLeft,
-            y: e.pageY - canvas.offsetTop
-        };
-        drag = true;
-    });
-
-    canvas.addEventListener("mousemove", (e) => {
-        if (drag) {
-            dragEnd = {
-                x: e.pageX - canvas.offsetLeft,
-                y: e.pageY - canvas.offsetTop
-            };
-            //canvas.getContext('2d').translate(dragEnd.x - dragStart.x, dragEnd.y - dragStart.y);
-
-            // check new values would be valid
-            
-            newParams = {}; // clone params
-            for (let key in params) {
-                newParams[key] = params[key];
-            }
-            newParams.x += dragEnd.x - dragStart.x;
-            newParams.y += dragEnd.y - dragStart.y;
-
-            newParams = ensurePanValid(params, newParams);
-            if (newParams != false) {
-                params = newParams;
-                dragStart = dragEnd;
-                updateImage(input_field.files[0], input_field, params);
+    ["mousedown", "touchstart"].forEach(function(event) {
+        canvas.addEventListener(event, (e) => {
+            if (typeof e.pageX !== 'undefined') {
+                dragStart = { // record drag start position
+                    x: e.pageX - canvas.offsetLeft,
+                    y: e.pageY - canvas.offsetTop
+                };
+            } else {
+                dragStart = { // record drag start position
+                    x: e.touches[0].pageX - canvas.offsetLeft,
+                    y: e.touches[0].pageY - canvas.offsetTop
+                };
             }
             
-            
-        }
+            drag = true;
+        });
     });
 
-    document.addEventListener("mouseup", (e) => {
-        drag = false;
+    ["mousemove", "touchmove"].forEach(function(event) {
+        canvas.addEventListener(event, (e) => {
+            if (drag) {
+                if (typeof e.pageX !== 'undefined') {
+                    dragEnd = { // record drag start position
+                        x: e.pageX - canvas.offsetLeft,
+                        y: e.pageY - canvas.offsetTop
+                    };
+                } else {
+                    dragEnd = { // record drag start position
+                        x: e.touches[0].pageX - canvas.offsetLeft,
+                        y: e.touches[0].pageY - canvas.offsetTop
+                    };
+                }
+                //canvas.getContext('2d').translate(dragEnd.x - dragStart.x, dragEnd.y - dragStart.y);
+
+                // check new values would be valid
+                
+                newParams = {}; // clone params
+                for (let key in params) {
+                    newParams[key] = params[key];
+                }
+                newParams.x += dragEnd.x - dragStart.x;
+                newParams.y += dragEnd.y - dragStart.y;
+
+                newParams = ensurePanValid(params, newParams);
+                if (newParams != false) {
+                    params = newParams;
+                    dragStart = dragEnd;
+                    updateImage(input_field.files[0], input_field, params);
+                }
+                
+                
+            }
+        });
+    });
+
+    ["mouseup", "touchend"].forEach(function(event) {
+        document.addEventListener(event, (e) => {
+            drag = false;
+        });
     });
 
 }
@@ -189,7 +226,6 @@ function updateImage(file, img_input, newParams) {
         
 
         image.onload = function(){
-            // console.log(newParams.x);
             if (newParams.extended){
                 context.drawImage(
                     image,
@@ -228,8 +264,6 @@ function ensurePanValid(params, newParams) {
         newParams.y = 0;
     }
     //if right or bottom side of image would be inside of canvas
-    console.log(newParams.height - Math.abs(newParams.y), canvas_dimensions.height);
-    console.log(params.y);
     if (newParams.height - Math.abs(newParams.y) < canvas_dimensions.height) {
         newParams.y = params.y;
     }
@@ -238,10 +272,6 @@ function ensurePanValid(params, newParams) {
     }
 
     return newParams;
-}
-
-function ensureZoomValid() {
-
 }
 
 
@@ -256,99 +286,6 @@ document.addEventListener("DOMContentLoaded", () => {
         var file = e.currentTarget.files[0];
         defaultParams(file, updateImage, e.currentTarget);
     }
-
-    document.querySelectorAll("#image-params input").forEach(field => {
-        // console.log();
-        if (field.type == "range") {
-            field.addEventListener("input", (e) => {
-
-                const oldWidth = params.width;
-                const oldHeight = params.height;
-                const ratio = (oldWidth / oldHeight);
-
-                let value = Number(e.currentTarget.value);
-                
-                if (longest == "height") {
-                    var newWidth = value;
-                    var newHeight = value / ratio;
-                } else if (longest == "width") {
-                    var newHeight = value;
-                    var newWidth = value * ratio;
-                }
-
-                // if left or top side of image would be inside of canvas
-                
-                // if right or bottom side of image would be inside of canvas
-                // console.log(newParams.height - Math.abs(newParams.y), canvas_dimensions.height);
-                // console.log(params.y);
-                var xcompensate = 0;
-                var ycompensate = 0;
-                if (newHeight + params.y < canvas_dimensions.height) {
-                    ycompensate = newHeight + params.y - canvas_dimensions.height;
-                }
-                if (newWidth + params.x < canvas_dimensions.width) {
-                    xcompensate = newWidth + params.x - canvas_dimensions.width;
-                }
-
-                var xdifference = ((oldWidth - newWidth) / 2) + params.x - xcompensate;
-                var ydifference = ((oldHeight - newHeight) / 2) + params.y - ycompensate;
-
-                // var xdifference = params.x + xcompensate;
-                // var ydifference = params.y + ycompensate;
-
-                console.log(xdifference, oldWidth, newWidth, params.x, xcompensate);
-                
-                if (xdifference > 0) {
-                    console.log(xdifference);
-                    xdifference = 0;
-                }
-                if (ydifference > 0) {  //////////// do this bit
-                    ydifference = 0;
-                }
-
-                params.x = xdifference;
-                params.y = ydifference;
-                params.width = newWidth;
-                params.height = newHeight;
-                params.extended = false;
-                
-                let img_input = document.getElementById("img_upload"); 
-                updateImage(img_input.files[0], img_input, params);
-            });
-        } else if(field.id == "zoom_in" || field.id == "zoom_out") {
-            field.addEventListener("click", (e) => {
-                if (field.id == "zoom_in") {
-                    var scale = 1.1;
-                } else {
-                    var scale = 0.9;
-                }
-
-                //scaleImage(scale);
-                //updateImage(img_input.files[0], img_input);
-            });
-        } else {
-            field.addEventListener("change", (e) => {
-                let name = e.currentTarget.id;
-                let value = e.currentTarget.value;
-
-                if (name == "szoom") {
-                    // params.swidth = value;
-                    // params.sheight = value;
-                } else {
-                    params[name] = value;
-                }
-
-                params.extended = true;
-                
-                let img_input = document.getElementById("img_upload");
-                updateImage(img_input.files[0], img_input, params);
-            });
-        }
-    });
-
-
-
-    // set up click/drag events for panning
 });
 
 /////// Form submit
@@ -434,4 +371,58 @@ function setRangeMax(ratio) {
     slider.min = Math.min(canvas_dimensions.width, canvas_dimensions.height);
     slider.max = slider.min * 3;
     slider.value = slider.min;
+}
+
+function addZoomEvent(zoomSlider) {
+    zoomSlider.addEventListener("input", (e) => {
+
+        const oldWidth = params.width;
+        const oldHeight = params.height;
+        const ratio = (oldWidth / oldHeight);
+
+        let value = Number(e.currentTarget.value);
+        
+        if (longest == "height") {
+            var newWidth = value;
+            var newHeight = value / ratio;
+        } else if (longest == "width") {
+            var newHeight = value;
+            var newWidth = value * ratio;
+        }
+
+        // if left or top side of image would be inside of canvas
+        
+        // if right or bottom side of image would be inside of canvas
+        // console.log(newParams.height - Math.abs(newParams.y), canvas_dimensions.height);
+        // console.log(params.y);
+        var xcompensate = 0;
+        var ycompensate = 0;
+        if (newHeight + params.y < canvas_dimensions.height) {
+            ycompensate = newHeight + params.y - canvas_dimensions.height;
+        }
+        if (newWidth + params.x < canvas_dimensions.width) {
+            xcompensate = newWidth + params.x - canvas_dimensions.width;
+        }
+
+        var xdifference = ((oldWidth - newWidth) / 2) + params.x - xcompensate;
+        var ydifference = ((oldHeight - newHeight) / 2) + params.y - ycompensate;
+
+        // var xdifference = params.x + xcompensate;
+        // var ydifference = params.y + ycompensate;
+        if (xdifference > 0) {
+            xdifference = 0;
+        }
+        if (ydifference > 0) {  //////////// do this bit
+            ydifference = 0;
+        }
+
+        params.x = xdifference;
+        params.y = ydifference;
+        params.width = newWidth;
+        params.height = newHeight;
+        params.extended = false;
+        
+        let img_input = document.getElementById("img_upload"); 
+        updateImage(img_input.files[0], img_input, params);
+    });
 }
