@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Hello, World!</title>
+	<script src="script.js"></script>
+	<link rel="stylesheet" href="style.css"></link>
+</head>
+<body>
+	<form method="post" enctype="multipart/form-data" action="index.php">
+		<label>
+		  <span>Upload your photo</span>
+		  <input type="file" accept="image/*" id="img_upload" name="photo" />
+		</label>
+	  
+		<button name="do" value="upload">Upload!</button>
+	</form>
+	<br>
+	<br>
+	<div id="image-params">
+		<input id="sx" type="text" value="0">
+		<input id="sy" type="text" value="0">
+		<input id="swidth" type="text" value="300">
+		<input id="sheight" type="text" value="300">
+		<input id="x" type="text" value="0">
+		<input id="y" type="text" value="0">
+		<input id="width" type="text" value="300">
+		<input id="height" type="text" value="300">
+		<br>
+		<input type="range" id="szoom" value="300" min="40" max="1000">
+		<input type="button" id="zoom_in" name="zoom_in" value="+">
+		<input type="button" id="zoom_out" name="zoom_out" value="-">
+	</div>
+</body>
+</html>
