@@ -1,87 +1,3 @@
-// function readImage(file, input_field) {
-//     if (file.type && !file.type.startsWith('image/')) {
-//         console.log("File is not an image.");
-//         return;
-//     }
-
-//     const reader = new FileReader();
-
-//     reader.addEventListener('load', (event) => {
-
-//         var canvas = document.createElement("canvas");
-//         if (!canvas.getContext){
-//             return
-//         }
-//         canvas.id = "viewport";
-//         canvas.width = 300;
-//         canvas.height = 300;
-
-//         var context = canvas.getContext('2d');
-
-//         var image = new Image();
-//         image.src = event.target.result;
-
-//         image.onload = function(){
-//             var image_width = image.width;
-//             var image_height = image.height;
-
-//             // new array of width/height
-//             // sort by value ascending
-//             // get key
-//             // find ratio btween lowest and 300px
-//             // to do that, small num / 300 == ratio
-//             // big number / ratio >= 300
-
-//             var arr = [
-//                 ["width", image_width],
-//                 ["height", image_height]
-//             ];
-//             arr.sort(function(a, b) {
-//                 return a[1] - b[1];
-//             });
-
-//             arr = arr.sort();
-//             console.log(arr[0], arr[1]);
-
-//             var ratio = arr[0][1] / 300; // canvas size
-//             arr[1][1] = arr[1][1] / ratio;
-//             var large_mid = arr[1][1] / 2;
-
-//             var swidth = null;
-//             var sheight = null;
-
-//             arr.forEach(element => {
-//                 if (element[0] == "width") {
-//                     swidth = element[1];
-//                 } else if (element[0] == "height") {
-//                     sheight = element[1];
-//                 }
-//             });
-
-            
-//             context.drawImage(
-//                 image,
-//                 params.sx,
-//                 params.sy,
-//                 swidth,
-//                 sheight,
-//                 params.x,
-//                 params.y,
-//                 params.width,
-//                 params.height
-//             );
-//         }
-
-//         let currentCanvas = document.getElementById("viewport");
-//         if (currentCanvas != null) {
-//             currentCanvas.remove();
-//         }
-//         input_field.after(canvas);
-//     });
-
-//     reader.readAsDataURL(file);
-// }
-
 var canvas_dimensions = {
     "width": 300,
     "height": 300
@@ -299,11 +215,13 @@ document.addEventListener("DOMContentLoaded", () => {
         input.type = "text";
         input.name = "image_base64";
 
-        var canvas = document.getElementById("viewport");
+        var canvas = document.getElementById("image-crop-canvas");
         var canvas_base64 = canvas.toDataURL();
         input.value = canvas_base64;
 
         form.appendChild(input);
+        console.log("hello");
+        return true;
     });
 });
 
